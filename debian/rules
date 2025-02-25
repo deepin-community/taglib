@@ -2,7 +2,7 @@
 
 include /usr/share/dpkg/architecture.mk
 
-export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all, optimize=+lto
 
 export DEB_CFLAGS_MAINT_APPEND += -fvisibility=hidden -fvisibility-inlines-hidden
 export DEB_CXXFLAGS_MAINT_APPEND += -fvisibility=hidden -fvisibility-inlines-hidden
@@ -18,18 +18,16 @@ DH_AUTO_ARGS = --buildsystem=cmake --builddirectory=builddir
 override_dh_auto_configure:
 	dh_auto_configure $(DH_AUTO_ARGS) -- \
 		-DCMAKE_USE_RELATIVE_PATHS=ON -DWITH_ASF=ON -DWITH_MP4=ON \
-		-DLIB_INSTALL_DIR:PATH=/usr/lib/$(DEB_HOST_MULTIARCH) \
-		-DBUILD_SHARED_LIBS=ON
+		-DBUILD_SHARED_LIBS=ON \
+		-DBUILD_TESTING=ON \
+		-DVISIBILITY_HIDDEN=ON \
+		$(NULL)
 
 override_dh_installchangelogs:
-	dh_installchangelogs NEWS
+	dh_installchangelogs CHANGELOG.md
 
 override_dh_installdocs:
 	dh_installdocs -X '*.md5'
-	# Install bindings README
-	if [ -d debian/libtag1v5 ]; then \
-	    install -m644 -oroot -groot -T bindings/README debian/libtag1v5/usr/share/doc/libtag1v5/README.bindings; \
-	fi;
 
 # Generate docs when building indep
 execute_after_dh_auto_build-indep:
@@ -42,4 +40,4 @@ execute_after_dh_auto_build-indep:
 
 # All-in-one default dh rule
 %:
-	dh $@ --with=pkgkde-symbolshelper $(DH_AUTO_ARGS)
+	dh $@ $(DH_AUTO_ARGS)
